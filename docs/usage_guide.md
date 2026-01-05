@@ -142,6 +142,68 @@ avg_time, std_time = measure_inference_time(model, test_loader, device)
 print(f"推理时间: {avg_time:.2f}ms")
 ```
 
+### 4. 使用预训练模型
+
+#### 方法1: 使用命令行参数
+
+```bash
+# 从预训练模型继续训练
+python src/training/train_base.py \
+    --pretrained_model checkpoints/best_base_model.pt \
+    --num_epochs 5 \
+    --learning_rate 1e-5
+
+# 使用预训练模型作为教师模型进行压缩
+python src/training/train_compressed.py \
+    --teacher_model_path checkpoints/best_base_model.pt \
+    --use_distillation
+```
+
+#### 方法2: 使用Python API
+
+```python
+from src.models.transformer import load_pretrained_model
+
+# 加载预训练模型
+model = load_pretrained_model(
+    model_path='checkpoints/best_base_model.pt',
+    vocab_size=10000,
+    num_classes=2,
+    device='cuda'
+)
+
+# 直接用于推理
+model.eval()
+with torch.no_grad():
+    predictions = model(input_tensor)
+
+# 或继续微调
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+# ... 训练代码 ...
+```
+
+#### 支持的模型格式
+
+本框架支持多种预训练模型格式：
+
+```python
+# 格式1: 完整checkpoint（推荐）
+checkpoint = {
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'epoch': epoch,
+    'loss': loss
+}
+torch.save(checkpoint, 'model.pt')
+
+# 格式2: 仅state_dict
+torch.save(model.state_dict(), 'model.pt')
+
+# 格式3: 使用我们的save_checkpoint函数
+from src.utils.helpers import save_checkpoint
+save_checkpoint(model, optimizer, epoch, loss, 'model.pt')
+```
+
 ## 使用示例
 
 ### 示例1: 基础使用

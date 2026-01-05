@@ -38,6 +38,9 @@ pip install -r requirements.txt
 # 训练基础Transformer模型
 python src/training/train_base.py
 
+# 从预训练模型继续训练
+python src/training/train_base.py --pretrained_model checkpoints/best_base_model.pt
+
 # 应用模型压缩
 python src/training/train_compressed.py --method pruning
 
@@ -48,6 +51,7 @@ python experiments/run_experiments.py
 ## 主要特性
 
 - **多种压缩技术**: 实现了剪枝、量化、知识蒸馏等多种压缩方法
+- **预训练模型支持**: 支持加载和使用预训练模型进行微调或压缩
 - **完整的实验框架**: 包含训练、评估、可视化的完整流程
 - **详细的文档**: 包含理论背景、技术创新和实验分析
 

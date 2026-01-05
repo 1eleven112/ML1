@@ -251,6 +251,60 @@ def create_base_model(vocab_size, num_classes=2):
     return model
 
 
+def load_pretrained_model(model_path, vocab_size, num_classes=2, device='cpu'):
+    """
+    加载预训练的Transformer模型
+    
+    Args:
+        model_path: 预训练模型文件路径
+        vocab_size: 词汇表大小
+        num_classes: 分类类别数
+        device: 设备 ('cpu' 或 'cuda')
+    
+    Returns:
+        model: 加载了预训练权重的模型
+    
+    示例:
+        # 加载预训练模型
+        model = load_pretrained_model('checkpoints/best_model.pt', vocab_size=10000)
+        
+        # 继续训练或推理
+        model.eval()
+        with torch.no_grad():
+            output = model(input_tensor)
+    """
+    import os
+    
+    # 创建模型结构
+    model = create_base_model(vocab_size, num_classes)
+    
+    # 检查文件是否存在
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"预训练模型文件不存在: {model_path}")
+    
+    # 加载权重
+    checkpoint = torch.load(model_path, map_location=device)
+    
+    # 处理不同的保存格式
+    if isinstance(checkpoint, dict):
+        if 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+            print(f"从checkpoint加载模型 (epoch {checkpoint.get('epoch', 'N/A')})")
+        elif 'state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['state_dict'])
+        else:
+            # 假设字典本身就是state_dict
+            model.load_state_dict(checkpoint)
+    else:
+        # 直接是state_dict
+        model.load_state_dict(checkpoint)
+    
+    model = model.to(device)
+    print(f"成功加载预训练模型: {model_path}")
+    
+    return model
+
+
 if __name__ == "__main__":
     # 测试代码
     vocab_size = 10000

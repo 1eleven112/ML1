@@ -102,6 +102,24 @@ def main(args):
     # 创建模型
     print("\n创建模型...")
     model = create_base_model(vocab_size, num_classes=args.num_classes)
+    
+    # 加载预训练模型（如果指定）
+    if args.pretrained_model:
+        if os.path.exists(args.pretrained_model):
+            print(f"加载预训练模型: {args.pretrained_model}")
+            checkpoint = torch.load(args.pretrained_model, map_location='cpu')
+            
+            # 处理不同的保存格式
+            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                model.load_state_dict(checkpoint['model_state_dict'])
+                print(f"从checkpoint加载模型 (epoch {checkpoint.get('epoch', 'N/A')})")
+            else:
+                model.load_state_dict(checkpoint)
+                print("从state_dict加载模型")
+        else:
+            print(f"警告: 预训练模型文件不存在: {args.pretrained_model}")
+            print("将使用随机初始化的模型")
+    
     model = model.to(device)
     print_model_summary(model, "基础Transformer模型")
     
@@ -178,6 +196,8 @@ if __name__ == "__main__":
     # 其他参数
     parser.add_argument('--save_dir', type=str, default='checkpoints',
                         help='模型保存目录')
+    parser.add_argument('--pretrained_model', type=str, default=None,
+                        help='预训练模型路径（可选）')
     parser.add_argument('--seed', type=int, default=42,
                         help='随机种子')
     
